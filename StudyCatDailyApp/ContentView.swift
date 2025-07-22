@@ -10,9 +10,6 @@ import SwiftUI
 struct ContentView: View {
     
     @ObservedObject var viewModel = ViewModel()
-    @State var startAnimationPlayed = false
-    @State var startUpAnimationBegin: Bool = false
-    @State var gradientAnimation: Bool = false
     var body: some View {
         
         ZStack {
@@ -20,39 +17,40 @@ struct ContentView: View {
                 Color.black
                     .ignoresSafeArea()
             } else {
-                Color.clear
+                LinearGradient(colors: [.blue,.green, .red] , startPoint: .leading, endPoint:.trailing)
                     .ignoresSafeArea()
-                    .background(Gradient(colors: gradientAnimation ? [.blue, .red] : [.red, .blue]))
-                    .animation(.linear(duration: 2), value: gradientAnimation)
+                    .hueRotation(.degrees(viewModel.gradientAnimation ? 360 : 0))
                     .onAppear {
-                        gradientAnimation.toggle()
-                        withAnimation(.linear(duration: 6).delay(4)) {
-                            gradientAnimation.toggle()
+                        withAnimation(.linear(duration: 6).repeatForever(autoreverses: false)) {
+                            viewModel.gradientAnimation.toggle()
                         }
+                           
                     }
                     
             }
+            
+            
             Text("Cat of the day")
                 .font(.system(size: 30, weight: .bold, design: .rounded))
-            
+                .shadow(color: .black ,radius: 5, x: 0, y: 5)
                 .foregroundColor(.white)
                 .padding()
-                .rotation3DEffect(.degrees(startUpAnimationBegin ? 360 : 0), axis: (x: 0, y: 1, z: 0))
-                .position(x: UIScreen.main.bounds.width / 2, y: startAnimationPlayed ? 30 : (UIScreen.main.bounds.height / 2 - 100))
-                .animation(.easeInOut(duration: 1.5),value: startUpAnimationBegin)
+                .rotation3DEffect(.degrees(viewModel.startUpAnimationBegin ? 360 : 0), axis: (x: 0, y: 1, z: 0))
+                .position(x: UIScreen.main.bounds.width / 2, y: viewModel.startAnimationPlayed ? 30 : (UIScreen.main.bounds.height / 2 - 100))
+                .animation(.easeInOut(duration: 1.5),value: viewModel.startUpAnimationBegin)
                 .onAppear {
                     
                     withAnimation(.linear(duration: 1)) {
-                        startUpAnimationBegin = true
+                        viewModel.startUpAnimationBegin = true
                     } completion: {
                         withAnimation(.easeInOut(duration: 0.5)) {
-                            startAnimationPlayed = true
+                            viewModel.startAnimationPlayed = true
                         }
                         
                     }
                 }
             
-            if startAnimationPlayed {
+            if viewModel.startAnimationPlayed {
                 VStack {
                     
                     Spacer()
@@ -110,19 +108,20 @@ struct ContentView: View {
                     .scaleEffect(viewModel.tapped ? 1.1 : 1)
                     .animation( .spring(), value: viewModel.tapCount)
                     .shadow(color: .white ,radius: viewModel.tapCount == 3 ? 5 : 0)
-                    Text(viewModel.catImageDescription ?? "")
-                        .foregroundStyle(viewModel.tapCount == 3 ? Color.white : .black)
+                    Text(viewModel.randomDescription!)
+                        .foregroundStyle( Color.white )
                         .opacity(viewModel.tapCount == 3 ? 1 : 0)
                         .position(x: UIScreen.main.bounds.width / 2, y: UIScreen.main.bounds.height / 2 - 300)
-                        .animation(.spring(duration: 0.5), value: viewModel.tapCount)
+//                        .animation(.spring(duration: 0.5), value: viewModel.tapCount)
+                        .font(.system(size: 40, weight: .bold, design: .default))
+                        .shadow(color: .white ,radius: 10)
+                        
                     Button("Reload") {
                         viewModel.tapCount = 0
                         Task {
-                            viewModel.catImage = nil
                             await  viewModel.getCatImage()
                         }
                     }
-                    
                     Spacer()
                 }
             }
@@ -130,6 +129,7 @@ struct ContentView: View {
             
         }
         .animation(.linear(duration: 2), value: viewModel.tapCount == 3)
+        
     }
     
 }
