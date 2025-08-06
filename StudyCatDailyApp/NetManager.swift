@@ -29,14 +29,13 @@ struct ImageElement: Codable {
 typealias Image = [ImageElement]
 
 class NetManager {
-    var shared: NetManager {
-        return self
-    }
+    static let shared = NetManager()
     let urlSession = URLSession(configuration: .default)
 //    let urlString = "https://api.humorapi.com/memes/search?keywords=cats,kitten,kitty&api-key=c853c3fea712427aa9b17e2f0aa5a156"
     let urlString = "https://api.thecatapi.com/v1/images/search"
     let jsonDecoder = JSONDecoder()
 //    func fetchImageURL() async throws -> (String?,String?) {
+    @MainActor
     func fectchImageURL() async throws -> String? {
         let url = URL(string: urlString)!
         let data = try await urlSession.data(from: url)
