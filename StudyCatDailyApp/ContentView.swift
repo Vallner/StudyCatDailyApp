@@ -10,28 +10,24 @@ import SwiftUI
 struct ContentView: View {
     @StateObject var viewModel = ViewModel()
     @StateObject var cardModel = CardModel()
-    @State var tapCount: Int = 0
-    @State var gradientAnimation: Bool = false
+    
     var body: some View {
         
         ZStack {
-           
-
+            
+            
             Color.black.edgesIgnoringSafeArea(.all)
-            LinearGradient(colors: tapCount == 3 ? [.blue,.green, .red] : [.black,.black, .black] , startPoint: .leading, endPoint:.trailing)
-                
-                                .ignoresSafeArea()
-                                .hueRotation(.degrees(gradientAnimation ? 360 : 0))
-                                .onAppear {
-                                    withAnimation(.linear(duration: 5).repeatForever(autoreverses: false)) {
-                                        gradientAnimation.toggle()
-                                    }
-                                
-                                }
-                                .mask {
-                                    BackgroundView()
-                                }
-   
+            LinearGradient(colors: viewModel.tapCount == 3 ? [.blue,.green, .red] : [.black,.black, .black] , startPoint: .leading, endPoint:.trailing)
+                .ignoresSafeArea()
+                .hueRotation(.degrees(viewModel.gradientAnimation ? 360 : 0))
+                .onAppear {
+                    withAnimation(.linear(duration: 5).repeatForever(autoreverses: false)) {
+                        viewModel.gradientAnimation.toggle()
+                    }
+                }
+                .mask {
+                    BackgroundView()
+                }
             Text("Cat of the day")
                 .font(.system(size: 30, weight: .bold, design: .rounded))
                 .shadow(color: .black ,radius: 5, x: 0, y: 5)
@@ -55,18 +51,27 @@ struct ContentView: View {
                 
                 VStack {
                     
-                    CardView(model: cardModel, tapCount: $tapCount)
-                    if tapCount == 3 {
+                    CardView(model: cardModel, tapCount: $viewModel.tapCount)
+                        .alert(isPresented: $cardModel.isError) {
+                            Alert(title: Text("Failed to load image"), message: Text("Please try again later."), dismissButton: .cancel(Text("Retry"), action: {
+                                Task {
+                                    await  cardModel.getCatImage()
+                                }
+                            }))
+                            
+                        }
+                    if viewModel.tapCount == 3 {
                         Text(cardModel.isFlipped ? viewModel.description.randomElement()! : " ")
                             .opacity(cardModel.isFlipped ? 1 : 0)
-                                .foregroundStyle( Color.white )
-                                .position(x: UIScreen.main.bounds.width / 2, y: UIScreen.main.bounds.height / 2 - 300)
-                                .font(.system(size: 40, weight: .bold, design: .default))
-                                .shadow(color: .white ,radius: 10)
-                                .animation(.linear(duration: 2).delay(1.5), value: cardModel.isFlipped)
+                            .foregroundStyle( Color.white )
+                            .position(x: UIScreen.main.bounds.width / 2, y: UIScreen.main.bounds.height / 2 - 300)
+                            .font(.system(size: 40, weight: .bold, design: .default))
+                            .shadow(color: .white ,radius: 10)
+                            .animation(.spring(duration: 2).delay(1.5), value: cardModel.isFlipped)
                         Button("Reload") {
-                            tapCount = 0
+                            viewModel.tapCount = 0
                             cardModel.isFlipped.toggle()
+                            cardModel.catImage = ""
                             SoundManager.shared.player?.stop()
                         }
                         .padding()
@@ -77,13 +82,20 @@ struct ContentView: View {
                         .task {
                             await cardModel.getCatImage()
                         }
+                        .alert(isPresented: $cardModel.isError) {
+                            Alert(title: Text("Failed to load image"), message: Text("Please try again later."), dismissButton: .cancel(Text("Retry"), action: {
+                                Task {
+                                    await  cardModel.getCatImage()
+                                }
+                            }))
+                        }
                     }
                     
                     Spacer()
                 }
             }
         }
-        .animation(.spring(duration: 0.5), value: tapCount)
+        .animation(.spring(duration: 0.5), value: viewModel.tapCount)
         
     }
     

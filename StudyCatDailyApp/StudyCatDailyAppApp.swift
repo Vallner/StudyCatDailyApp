@@ -14,5 +14,5 @@ struct StudyCatDailyApp: App {
             ContentView()
         }
     }
-       
+    
 }
