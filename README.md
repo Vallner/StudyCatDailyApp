@@ -7,6 +7,5 @@
 
 <img width="322" height="585" alt="Снимок экрана 2025-08-07 в 12 21 49" src="https://github.com/user-attachments/assets/6ab7f3c6-b153-466f-a981-3aea70b02558" />
 
-
 https://github.com/user-attachments/assets/eb5a4f25-a65e-40bc-93a0-7ea69493ceb3
 
